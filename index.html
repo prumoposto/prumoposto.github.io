@@ -19,6 +19,27 @@
 </head>
 <body>
   <!-- Endereço da implantação oficial do Prumo Posto (Apps Script /exec) -->
-  <iframe src="https://script.google.com/macros/s/AKfycbzK1OqnnHzcb9xdNnvoHCMVqrIRd6dIEPpbhBx0QvAHzwverzHN-jXU6-Ams_l0ZQSu/exec" allow="camera; microphone; clipboard-write; geolocation"></iframe>
+  <iframe id="app" allow="camera; microphone; clipboard-write; geolocation"></iframe>
+  <script>
+    (function () {
+      var EXEC = 'https://script.google.com/macros/s/AKfycbzK1OqnnHzcb9xdNnvoHCMVqrIRd6dIEPpbhBx0QvAHzwverzHN-jXU6-Ams_l0ZQSu/exec';
+      // link pessoal (?k=...) passa para o aplicativo
+      var k = ''; try { k = new URLSearchParams(location.search).get('k') || ''; } catch (e) { }
+      document.getElementById('app').src = EXEC + (/^[A-Za-z0-9_-]{20,100}$/.test(k) ? '?k=' + k : '');
+      // Guarda a sessão do aplicativo neste endereço: dentro do iframe o navegador do celular apaga o que o app guarda.
+      // Só responde ao aplicativo aberto dentro desta página (endereço do Apps Script).
+      var ORIGEM = /^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/;
+      function g(c, v) { try { if (v === undefined) return localStorage.getItem(c) || ''; if (v) localStorage.setItem(c, v); else localStorage.removeItem(c); } catch (e) { } return ''; }
+      window.addEventListener('message', function (ev) {
+        var d = ev.data; if (!d || d.prumo !== 1 || !ORIGEM.test(ev.origin) || !ev.source) return;
+        try { if (ev.source.top !== window) return; } catch (e) { return; }
+        if (d.t === 'pede') ev.source.postMessage({ prumo: 1, t: 'tok', tok: g('prumo_tok'), email: g('prumo_email') }, ev.origin);
+        else if (d.t === 'guarda') {
+          g('prumo_tok', /^[a-f0-9]{48}$/.test(String(d.tok || '')) ? d.tok : '');
+          if (d.email) g('prumo_email', String(d.email).slice(0, 120));
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
